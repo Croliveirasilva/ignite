@@ -20,7 +20,20 @@ function verifyExistsAccountCPF(request, response, next){
 
     request.customer = custormer;
     return next();
+}
 
+/// outras funções
+
+function getBalance(statement){
+  const balance =  statement.reduce((acc,operation)=>{
+        if(operation.type==='credit'){
+            return acc + operation.amount;
+        }else{
+            return acc - operation.amount;
+        }
+    },0);
+
+    return balance;
 }
 
 //Realizando a criação de uma conta 
@@ -44,12 +57,78 @@ customers.push({
 });
 
 //Realizando busca por extrato
-
 app.get("/statement",verifyExistsAccountCPF ,(request,response)=>{
    const {customer}=request;
 
    return response.json(custormer.statement);
-   
+
     });
 
+// Realiza um deposito
+app.post("/deposit",verifyExistsAccountCPF ,(request,response)=>{
+    const {description, amount}=request.body;
+    const {customer}= request;
+
+    const statementOperation ={
+        description,
+        amount,
+        created_at:new Date(),
+        type:"credit",
+    }
+
+    customer.statement.push(statementOperation);
+ 
+    return response.status(201).send();
+     
+     });
+
+///realiza um saque
+app.post("/withdraw",verifyExistsAccountCPF ,(request,response)=>{
+    const {amount}=request.body;
+    const {customer}= request;
+
+    const balance = getBalance(customer.statement);
+
+    if(balance<amount){
+        return response.status(400).json({error:"Fundos insuficiente"});
+    }
+     
+    const statementOperation ={
+        
+        amount,
+        created_at:new Date(),
+        type:"debit",
+    }
+
+    customer.statement.push(statementOperation);
+ 
+    return response.status(201).send();
+     
+     }); 
+
+///Realiza uma pesquisa de saldo por data
+app.get("/statement/date",verifyExistsAccountCPF ,(request,response)=>{
+    const {customer}=request;
+    const{date} = request.query;
+
+    const dateFormat = new Date(date + " 00:00");
+
+    const statement = customer.statement.filter((statement)=>statement.created_at.toDateString()=== new Date
+    (dateFormat).toDateString()
+    );
+ 
+    return response.json(statement);
+ 
+     });
+
+///Realiza atualização da conta     
+app.put("/account",verifyExistsAccountCPF ,(request,response)=>{
+    const {customer}=request;
+    const{name} = request.body;
+
+    customer.name = name;
+ 
+    return response.status(201).send();
+ 
+     });
 app.listen(3333);
