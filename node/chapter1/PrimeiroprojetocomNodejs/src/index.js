@@ -82,7 +82,7 @@ app.post("/deposit",verifyExistsAccountCPF ,(request,response)=>{
      
      });
 
-///realiza um saque
+///Realiza um saque
 app.post("/withdraw",verifyExistsAccountCPF ,(request,response)=>{
     const {amount}=request.body;
     const {customer}= request;
@@ -131,4 +131,30 @@ app.put("/account",verifyExistsAccountCPF ,(request,response)=>{
     return response.status(201).send();
  
      });
+
+     ///Realiza busca da conta    
+app.get("/account",verifyExistsAccountCPF ,(request,response)=>{
+   const {customer}=request;
+  
+
+   return response.json(customer);
+
+    });
+
+     ///Realiza a exclusão do usuario
+app.delete("/account",verifyExistsAccountCPF ,(request,response)=>{
+    const {customer}=request;
+   customer.splice(customer, 1);
+ 
+    return response.status(200).json(customer);
+  
+     });
+     
+     /// Realiza busca do saldo
+app.get("/account",verifyExistsAccountCPF ,(request,response)=>{
+   const {customer}=request;
+   const balance=getBalance(customer.statement);
+   return response.json(balance);
+    });     
+     
 app.listen(3333);
